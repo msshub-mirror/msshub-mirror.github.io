@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>msshub-mirror.github.io - 動画閲覧</title>
+    <title>msshub.site - 動画閲覧</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -172,8 +172,14 @@
 
                 videoContainer.src = `https://www.youtube-nocookie.com/embed/${videoId}`;
                 videoTitle.textContent = video.title;
-                videoChannel.textContent = `投稿者: ${video.channelTitle}`;
-                channelThumbnail.src = video.thumbnails.default.url;
+                channelThumbnail.src = video.thumbnails.default.url; const channelId = video.channelId;
+                const channelResponse = await fetch(`https://www.googleapis.com/youtube/v3/channels?part=snippet&id=${channelId}&key=${apiKey}`);
+                const channelData = await channelResponse.json();
+
+                if (channelData.items.length > 0) {
+                    const channel = channelData.items[0].snippet;
+                    channelThumbnail.src = channel.thumbnails.default.url;
+                }
                 channelName.textContent = video.channelTitle;
 
                 const fullDescription = video.description;
@@ -262,12 +268,11 @@
 
                 commentsContainer.appendChild(commentElement);
             });
-        }
-
+        } 
         function handleSearch() {
             const query = document.getElementById('searchInput').value;
             if (query) {
-                window.location.href = `https://msshub-mirror.github.io/results?search_query=${encodeURIComponent(query)}`;
+                window.location.href = `https://msshub.site/results?search_query=${encodeURIComponent(query)}`;
             }
         }
 
@@ -284,7 +289,7 @@
     <div class="content-container">
         <div class="video-container">
             <div class="iframe-container">
-                <iframe id="videoIframe" src="" allowfullscreen></iframe>
+                <iframe id="videoIframe" src="" referrerpolicy="" allowfullscreen></iframe>
             </div>
             <div class="video-info">
                 <h3 id="videoTitle"></h3>
