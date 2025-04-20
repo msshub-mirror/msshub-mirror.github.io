@@ -1,0 +1,84 @@
+<!-- Recommendation: Only ever serve this handlebar template (or its raw HTML equivalent) from a protected route on your backend -->
+<!-- You can read more about this proxy and why it is necessary here: https://medium.com/@kfir.e/working-around-youtube-iframes-on-webview-based-mobile-apps-c8543fb7bd47 -->
+
+<html>
+  <style type="text/css">
+    body {
+      margin: 0;
+    }
+  </style>
+
+  <body>
+    <!-- 1. The <iframe> (and video player) will replace this <div> tag. -->
+    <div id="player"></div>
+
+    <script>
+      // 2. This code loads the IFrame Player API code asynchronously.
+      var tag = document.createElement('script');
+      tag.src = 'https://www.youtube.com/iframe_api';
+      var firstScriptTag = document.getElementsByTagName('script')[0];
+      firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+      // 3. Parse route param (videoId) and query params (player configuration)
+      // NOTE: This is the only line where handlebars is being used! You can change it to adapt to any other
+      //       template system, or even parse window.location.path to extract the videoId from /embed/:videoId
+      const videoId = "{{ videoId }}";
+      const queryParams = new URLSearchParams(window.location.search);
+      const hostWidgetId = queryParams.get('widgetid');
+      // Note: assuming all query params are player vars 
+      //       (it's fine because non-youtube query params will not cause any harm)
+      const playerVarsFromQueryParams = queryParams
+        ? Object.fromEntries(queryParams)
+        : {};
+
+      const windowLocationHost =
+        window.location.protocol + '//' + window.location.host;
+
+      // 4. This function creates an <iframe> (and YouTube player)
+      //    after the API code downloads.
+      var player;
+      function onYouTubeIframeAPIReady() {
+        player = new YT.Player('player', {
+          height: '100%',
+          width: '100%',
+          videoId,
+          playerVars: {
+            playsinline: 1,
+            origin: windowLocationHost,
+            ...playerVarsFromQueryParams,
+          },
+        });
+      }
+
+      // 5. Set up event relaying to maintain the player API's functionality
+      function proxyMessageEvents(event) {
+        // Relay messages from your app to the YouTube iframe
+        if (event.origin !== 'https://www.youtube.com') {
+          // Note: This assumes that the proxy webpage does not render any other iframe
+          document
+            .querySelector('iframe')
+            ?.contentWindow?.postMessage(event.data, 'https://www.youtube.com');
+          // Relay messages from the YouTube iframe to your app
+        } else {
+          // Parse the event to patch its ID
+          let parsed = null;
+          try {
+            parsed = JSON.parse(event.data);
+          } catch (err) {
+            console.error('[YT Proxy] Failed to parse event.data as JSON', err);
+            return;
+          }
+
+          // Patch the ID to make YouTube's JS API on the host app recognize it
+          if (parsed && hostWidgetId) {
+            parsed.id = hostWidgetId;
+          }
+
+          window.parent.postMessage(JSON.stringify(parsed), queryParams.get('origin') || '*');
+        }
+      }
+
+      window.addEventListener('message', proxyMessageEvents);
+    </script>
+  </body>
+</html>
