@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>YouTube チェック</title>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script>
+    const URL_ON_YOUTUBE = 'https://your-api-url-here.com'; // ← ここに正しいYouTube APIのURLを入力してください
+
+    function check_youtube() {
+      $.ajax({
+        type: 'GET',
+        dataType: 'json',
+        url: URL_ON_YOUTUBE,
+        timeout: 5000,
+        success: function(data, textStatus ){
+          alert('Woot, Cat videos on the way!');
+        },
+        error: function(xhr, textStatus, errorThrown){
+          alert('Ooops, You suck, proxy blocking your way');
+        }
+      });
+    }
+  </script>
+</head>
+<body>
+  <h1>YouTube チェック</h1>
+  <button onclick="check_youtube()">YouTubeを確認する</button>
+</body>
+</html>
