@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Clipboard Text Cleaner</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 20px;
+      max-width: 600px;
+      margin: auto;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+    }
+    textarea {
+      width: 100%;
+      height: 120px;
+      margin-top: 10px;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Clipboard Text Cleaner</h1>
+  <p>
+    クリップボードからテキストを取得し、空白と改行をすべて削除して再度クリップボードにコピーします。
+  </p>
+  <button id="cleanButton">クリップボードのテキストをクリーン＆コピー</button>
+  <textarea id="output" placeholder="ここにクリーン後のテキストが表示されます" readonly></textarea>
+
+  <script>
+    const btn = document.getElementById('cleanButton');
+    const output = document.getElementById('output');
+
+    btn.addEventListener('click', async () => {
+      try {
+        // クリップボードから読み込み
+        const text = await navigator.clipboard.readText();
+        // 空白・改行をすべて削除
+        const cleaned = text.replace(/\s+/g, '');
+        // クリーンした文字列をクリップボードへ書き戻し
+        await navigator.clipboard.writeText(cleaned);
+        // 結果を表示
+        output.value = cleaned;
+        alert('空白と改行を削除したテキストをクリップボードにコピーしました。');
+      } catch (err) {
+        console.error(err);
+        alert('クリップボードにアクセスできませんでした: ' + err);
+      }
+    });
+  </script>
+</body>
+</html>
